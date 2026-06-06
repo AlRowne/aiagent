@@ -12,7 +12,7 @@ def get_file_content(working_directory: str, file_path: str) -> str:
             == working_dir_abs_path
         )
         if not is_valid_file_path:
-            return f'Error: Cannot list "{file_path}" as it is outside the permitted working directory'
+            return f'Error: Cannot access "{file_path}" as it is outside the permitted working directory'
         if not os.path.isfile(file_abs_path):
             return f'Error: File not found or is not a regular file: "{file_path}"'
 
