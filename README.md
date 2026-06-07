@@ -1,6 +1,6 @@
 # AI Agent
 
-A CLI coding agent powered by Google Gemini that can autonomously read, write, and execute files within a working directory.
+A CLI coding agent powered by Google Gemini that autonomously reads, writes, and executes files within a working directory.
 
 ## How it works
 
