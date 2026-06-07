@@ -1,14 +1,15 @@
 import argparse
 import os
+from functools import partial
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 from prompts import system_prompt
 
-load_dotenv()
+_ = load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     raise RuntimeError("No Gemini API Key found")
@@ -16,8 +17,10 @@ if not api_key:
 
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
-    parser.add_argument("user_prompt", type=str, help="User prompt")
-    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
+    _ = parser.add_argument("user_prompt", type=str, help="User prompt")
+    _ = parser.add_argument(
+        "--verbose", action="store_true", help="Enable verbose output"
+    )
     args = parser.parse_args()
 
     messages: list[types.Content] = [
@@ -40,8 +43,24 @@ def main():
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
     if response.function_calls:
+        function_results = []
         for function_call in response.function_calls:
-            print(f"Calling function: {function_call.name}({function_call.args})")
+            # print(f"Calling function: {function_call.name}({function_call.args})")
+            function_call_result = call_function(function_call, args.verbose)
+            if not function_call_result.parts:
+                raise Exception(f"Function '{function_call.name}' returned no parts")
+            if not function_call_result.parts[0].function_response:
+                raise Exception(
+                    f"Function '{function_call.name}' returned no function_response"
+                )
+            if not function_call_result.parts[0].function_response.response:
+                raise Exception(
+                    f"Function '{function_call.name}' returned empty response"
+                )
+            function_results.append(function_call_result.parts[0])
+        if args.verbose:
+            print(f"-> {function_call_result.parts[0].function_response.response}")
+
     else:
         print(response.text)
 
